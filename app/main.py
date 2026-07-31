@@ -1,0 +1,47 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.core.config import settings
+from app.api.health import router as health_router
+from app.api.routes.profiles import router as profiles_router
+from app.api.routes.wallet import router as wallet_router
+from app.api.routes.companies import router as companies_router
+from app.api.routes.content import router as content_router
+from app.api.routes.media import router as media_router
+from app.api.routes.notifications import router as notifications_router
+from app.api.routes.purchases import router as purchases_router
+from app.api.routes.referrals import router as referrals_router
+from app.api.routes.reports import router as reports_router
+from app.api.routes.sends import router as sends_router
+from app.api.routes.social import router as social_router
+from app.api.routes.stories import router as stories_router
+from app.api.routes.subscriptions import router as subscriptions_router
+from app.api.routes.feed import router as feed_router
+from app.api.routes.follows import router as follows_router
+
+app = FastAPI(title="PartnerHub Python Backend")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.frontend_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(health_router)
+app.include_router(profiles_router)
+app.include_router(wallet_router)
+app.include_router(content_router)
+app.include_router(social_router)
+app.include_router(companies_router)
+app.include_router(notifications_router)
+app.include_router(purchases_router)
+app.include_router(referrals_router)
+app.include_router(reports_router)
+app.include_router(sends_router)
+app.include_router(stories_router)
+app.include_router(subscriptions_router)
+app.include_router(feed_router)
+app.include_router(follows_router)
+app.include_router(media_router)
