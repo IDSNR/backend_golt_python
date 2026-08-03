@@ -6,6 +6,7 @@ from app.api.health import router as health_router
 from app.api.routes.profiles import router as profiles_router
 from app.api.routes.wallet import router as wallet_router
 from app.api.routes.companies import router as companies_router
+from app.api.routes.auth import router as auth_router
 from app.api.routes.content import router as content_router
 from app.api.routes.media import router as media_router
 from app.api.routes.notifications import router as notifications_router
@@ -32,6 +33,7 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(profiles_router)
 app.include_router(wallet_router)
+app.include_router(auth_router)
 app.include_router(content_router)
 app.include_router(social_router)
 app.include_router(companies_router)

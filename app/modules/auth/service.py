@@ -1,6 +1,68 @@
+import hashlib
+import os
 import random
 import string
-from datetime import datetime
+from datetime import datetime, timezone
+
+
+class AuthService:
+    def __init__(self) -> None:
+        self.users: dict[str, dict] = {}
+        self.google_users: dict[str, dict] = {}
+
+    def _now_iso(self) -> str:
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+    def _hash_password(self, password: str) -> str:
+        salt = os.getenv("AUTH_PASSWORD_SALT", "dev-salt").encode("utf-8")
+        return hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 200_000).hex()
+
+    def register_user(self, email: str, password: str, display_name: str, skip_validation: bool = False) -> dict:
+        normalized = email.strip().lower()
+        if not normalized:
+            raise ValueError("email is required")
+        if not skip_validation and normalized in self.users:
+            raise ValueError("email already exists")
+        if not password or len(password) < 8:
+            raise ValueError("password must be at least 8 characters")
+
+        user = {
+            "id": f"user-{len(self.users) + 1}",
+            "email": normalized,
+            "displayName": display_name or "New user",
+            "passwordHash": self._hash_password(password),
+            "createdAt": self._now_iso(),
+            "authProvider": "email",
+        }
+        self.users[normalized] = user
+        return {"token": self._hash_password(normalized), "user": user}
+
+    def authenticate_user(self, email: str, password: str) -> dict:
+        normalized = email.strip().lower()
+        user = self.users.get(normalized)
+        if user is None or user["passwordHash"] != self._hash_password(password):
+            raise ValueError("invalid credentials")
+        return {"token": self._hash_password(normalized), "user": user}
+
+    def handle_google_auth(self, email: str, display_name: str, google_id: str) -> dict:
+        normalized = email.strip().lower()
+        existing = self.google_users.get(google_id)
+        if existing is not None:
+            return {"token": self._hash_password(google_id), "user": existing}
+
+        user = {
+            "id": f"google-{len(self.google_users) + 1}",
+            "email": normalized,
+            "displayName": display_name or "Google user",
+            "passwordHash": None,
+            "createdAt": self._now_iso(),
+            "authProvider": "google",
+        }
+        self.google_users[google_id] = user
+        return {"token": self._hash_password(google_id), "user": user}
+
+
+auth_service = AuthService()
 
 
 class ProfileService:
