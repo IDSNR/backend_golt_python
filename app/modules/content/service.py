@@ -1,12 +1,22 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class ContentService:
     def __init__(self) -> None:
         self.posts: list[dict] = []
+        self.create_post('user-1', {
+            'caption': 'Golden hour in the city.',
+            'mediaItems': [
+                {'id': 'media-1', 'mediaType': 'image', 'url': 'https://partnerhub.test/media/sample1.jpg', 'orderIndex': 0},
+            ],
+        })
+        self.create_post('user-2', {
+            'caption': 'Quick creator reel: day in the studio.',
+            'videoUrl': 'https://partnerhub.test/media/sample-video.mp4',
+        })
 
     def _now_iso(self) -> str:
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     def create_post(self, author_id: str, payload: dict) -> dict:
         if not payload.get('videoUrl') and not payload.get('mediaItems'):

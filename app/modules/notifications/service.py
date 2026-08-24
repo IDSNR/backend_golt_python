@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class NotificationService:
@@ -6,7 +6,7 @@ class NotificationService:
         self.notifications: list[dict] = []
 
     def _now_iso(self) -> str:
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     def send_notification(self, recipient_profile_id: str, notification_type: str, payload: dict) -> dict:
         notification = {

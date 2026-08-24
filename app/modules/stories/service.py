@@ -1,13 +1,23 @@
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 
 class StoryService:
     def __init__(self) -> None:
         self.stories: list[dict] = []
         self.views: list[dict] = []
+        self.post_story('user-1', {
+            'mediaUrl': 'https://partnerhub.test/media/story1.jpg',
+            'mediaType': 'image',
+            'isSponsored': False,
+        })
+        self.post_story('user-2', {
+            'mediaUrl': 'https://partnerhub.test/media/story2.mp4',
+            'mediaType': 'video',
+            'isSponsored': False,
+        })
 
     def _now_iso(self) -> str:
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     def post_story(self, creator_id: str, payload: dict) -> dict:
         if not payload.get('mediaUrl'):
@@ -20,12 +30,17 @@ class StoryService:
             'mediaUrl': payload.get('mediaUrl'),
             'isSponsored': payload.get('isSponsored', False),
             'created_at': self._now_iso(),
+            'expiresAt': (datetime.now(timezone.utc) + timedelta(hours=24)).replace(microsecond=0).isoformat().replace('+00:00', 'Z'),
         }
         self.stories.append(story)
         return story
 
     def get_active_stories(self, creator_id: str) -> list[dict]:
-        return [story for story in self.stories if story['creatorId'] == creator_id]
+        now = datetime.now(timezone.utc)
+        return [
+            story for story in self.stories
+            if story['creatorId'] == creator_id and datetime.fromisoformat(story['expiresAt'].replace('Z', '+00:00')) > now
+        ]
 
     def record_story_view(self, story_id: str, viewer_profile_id: str) -> None:
         story = self.get_story(story_id)

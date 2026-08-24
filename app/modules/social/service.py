@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SocialService:
@@ -7,7 +7,7 @@ class SocialService:
         self.followers: dict[str, set[str]] = {}
 
     def _now_iso(self) -> str:
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     def follow(self, follower_id: str, followee_id: str, followee_is_private: bool = True) -> dict:
         if follower_id == followee_id:
@@ -34,17 +34,21 @@ class SocialService:
             if request['followeeId'] == followee_id and request['status'] == 'pending'
         ]
 
-    def approve(self, request_id: str) -> dict:
+    def approve(self, request_id: str, acting_followee_id: str | None = None) -> dict:
         for request in self.follow_requests:
             if request['id'] == request_id:
+                if acting_followee_id is not None and request['followeeId'] != acting_followee_id:
+                    raise ValueError('Follow request not found')
                 request['status'] = 'approved'
                 self.followers.setdefault(request['followeeId'], set()).add(request['followerId'])
                 return request
         raise ValueError('Follow request not found')
 
-    def deny(self, request_id: str) -> dict:
+    def deny(self, request_id: str, acting_followee_id: str | None = None) -> dict:
         for request in self.follow_requests:
             if request['id'] == request_id:
+                if acting_followee_id is not None and request['followeeId'] != acting_followee_id:
+                    raise ValueError('Follow request not found')
                 request['status'] = 'denied'
                 return request
         raise ValueError('Follow request not found')
@@ -80,3 +84,17 @@ class SocialService:
 
     def is_approved_follower(self, viewer_id: str, creator_id: str) -> bool:
         return viewer_id in self.followers.get(creator_id, set())
+
+    def follower_count(self, followee_id: str) -> int:
+        return len(self.followers.get(followee_id, set()))
+
+    def following_count(self, follower_id: str) -> int:
+        return sum(1 for followers in self.followers.values() if follower_id in followers)
+
+    def relationship_status(self, viewer_id: str | None, profile_id: str) -> str:
+        if viewer_id is None:
+            return 'none'
+        if self.is_approved_follower(viewer_id, profile_id):
+            return 'following'
+        request = self.get_request_for(profile_id, viewer_id)
+        return 'requested' if request else 'none'

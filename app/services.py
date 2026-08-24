@@ -6,6 +6,8 @@ from app.modules.stories.service import StoryService
 from app.modules.wallet.service import WalletService
 from app.modules.commerce.service import CommerceService
 from app.modules.subscriptions.service import SubscriptionService
+from app.modules.dms import direct_message_service
+from app.modules.media import media_service
 
 profile_service = ProfileService()
 content_service = ContentService()
@@ -15,3 +17,5 @@ story_service = StoryService()
 wallet_service = WalletService()
 commerce_service = CommerceService()
 subscription_service = SubscriptionService()
+direct_message_service = direct_message_service
+media_service = media_service

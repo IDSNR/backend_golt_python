@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 class SubscriptionService:
@@ -7,7 +7,7 @@ class SubscriptionService:
         self.subscriptions: list[dict] = []
 
     def _now_iso(self) -> str:
-        return datetime.utcnow().isoformat() + 'Z'
+        return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
 
     def set_subscription_price(self, creator_profile_id: str, payload: dict) -> dict:
         if payload.get('priceCents') is None or payload.get('priceCents') < 0:

@@ -12,6 +12,8 @@ class Settings:
     app_name: str = "partnerhub-python-backend"
     port: int = int(os.getenv("PORT", "8000"))
     frontend_origins: List[str] = None
+    media_folder: str = os.getenv("MEDIA_FOLDER", "media_files")
+    media_url_path: str = os.getenv("MEDIA_URL_PATH", "/media/files")
 
     def __post_init__(self):
         if self.frontend_origins is None:

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 
 from app.modules.auth.service import auth_service
+from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -50,3 +51,10 @@ def google_auth(payload: GoogleAuthRequest):
         display_name=payload.displayName or "Google user",
         google_id=payload.googleId,
     )
+
+
+@router.post("/logout")
+def logout(authorization: str | None = Header(default=None), current_user: str = Depends(get_current_user)) -> dict:
+    if authorization and authorization.lower().startswith('bearer '):
+        auth_service.revoke_session(authorization[7:].strip())
+    return {"loggedOut": True, "userId": current_user}

@@ -19,6 +19,18 @@ class ProfileCreateRequest(BaseModel):
     identityLinkToken: str | None = None
 
 
+class ProfileUpdateRequest(BaseModel):
+    handle: str | None = None
+    displayName: str | None = None
+    bio: str | None = None
+    avatarUrl: str | None = None
+    bannerUrl: str | None = None
+    websiteUrl: str | None = None
+    location: str | None = None
+    pronouns: str | None = None
+    isPrivate: bool | None = None
+
+
 @router.post("", status_code=status.HTTP_201_CREATED)
 def create_profile(payload: ProfileCreateRequest, current_user: str = Depends(get_current_user)) -> dict:
     try:
@@ -33,13 +45,22 @@ def get_current_profile(current_user: str = Depends(get_current_user)) -> dict:
     profile = profile_service.get_profile(current_user)
     if profile is None:
         profile = profile_service.ensure_profile(current_user)
-    return {"profile": profile}
+    return {"profile": _enrich_profile(profile, current_user)}
 
 
 @router.post("/link-token")
 def create_link_token(current_user: str = Depends(get_current_user)) -> dict:
     token_payload = profile_service.create_link_token(current_user)
     return token_payload
+
+
+@router.post("/me", status_code=status.HTTP_200_OK)
+def update_current_profile(payload: ProfileUpdateRequest, current_user: str = Depends(get_current_user)) -> dict:
+    try:
+        profile = profile_service.update_profile(current_user, payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"profile": _enrich_profile(profile, current_user)}
 
 
 @router.get("/handle/{handle}")
@@ -49,12 +70,23 @@ def get_profile_by_handle(handle: str, current_user: str | None = Depends(get_op
         raise HTTPException(status_code=404, detail="Profile not found")
 
     creator_id = profile["id"]
-    if profile.get("is_private") and current_user is not None:
+    if profile.get("isPrivate") and current_user is not None:
         allowed = social_service.is_approved_follower(current_user, creator_id)
         content = content_service.list_posts_by_creator(creator_id) if allowed else []
-    elif profile.get("is_private") and current_user is None:
+    elif profile.get("isPrivate") and current_user is None:
         content = []
     else:
         content = content_service.list_posts_by_creator(creator_id)
 
-    return {"profile": profile, "content": content}
+    return {"profile": _enrich_profile(profile, current_user), "content": content}
+
+
+def _enrich_profile(profile: dict, viewer_id: str | None) -> dict:
+    enriched = profile.copy()
+    enriched.update({
+        'followerCount': social_service.follower_count(profile['id']),
+        'followingCount': social_service.following_count(profile['id']),
+        'postCount': len(content_service.list_posts_by_creator(profile['id'])),
+        'relationshipStatus': social_service.relationship_status(viewer_id, profile['id']),
+    })
+    return enriched

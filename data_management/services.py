@@ -1,9 +1,10 @@
 from __future__ import annotations
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
-from sqlalchemy import select
+from sqlalchemy import select, delete
+import json
 from sqlalchemy.orm import Session
 
 from .database import SessionLocal
@@ -24,6 +25,11 @@ from .models import (
     Post,
     Story,
     UserProfile,
+    MediaFile,
+    AdWatch,
+    RouletteSession,
+    RouletteSpin,
+    RouletteDecision,
 )
 
 
@@ -228,12 +234,121 @@ def create_story(
             media_url=media_url,
             media_type=media_type,
             caption=caption,
-            expires_at=datetime.utcnow() + timedelta(seconds=expires_in_seconds),
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=expires_in_seconds),
         )
         db.add(story)
         db.commit()
         db.refresh(story)
         return story
+    finally:
+        if session is None:
+            db.close()
+
+
+def create_media_record(*, filename: str, media_url: str, media_type: str = "image", content_type: Optional[str] = None, session: Optional[Session] = None) -> MediaFile:
+    db = session or SessionLocal()
+    try:
+        media = MediaFile(filename=filename, media_url=media_url, media_type=media_type, content_type=content_type)
+        db.add(media)
+        db.commit()
+        db.refresh(media)
+        return media
+    finally:
+        if session is None:
+            db.close()
+
+
+def list_media_records(session: Optional[Session] = None) -> list[MediaFile]:
+    db = session or SessionLocal()
+    try:
+        return db.execute(select(MediaFile)).scalars().all()
+    finally:
+        if session is None:
+            db.close()
+
+
+def record_ad_watch(*, account_id: int, session: Optional[Session] = None) -> AdWatch:
+    db = session or SessionLocal()
+    try:
+        watch = AdWatch(account_id=account_id)
+        db.add(watch)
+        db.commit()
+        db.refresh(watch)
+        return watch
+    finally:
+        if session is None:
+            db.close()
+
+
+def count_ad_watches(*, account_id: int, session: Optional[Session] = None) -> int:
+    db = session or SessionLocal()
+    try:
+        items = db.execute(select(AdWatch).where(AdWatch.account_id == account_id)).scalars().all()
+        return len(items)
+    finally:
+        if session is None:
+            db.close()
+
+
+def clear_ad_watches(*, account_id: int, session: Optional[Session] = None) -> None:
+    db = session or SessionLocal()
+    try:
+        db.execute(delete(AdWatch).where(AdWatch.account_id == account_id))
+        db.commit()
+    finally:
+        if session is None:
+            db.close()
+
+
+def create_roulette_session(*, created_by_account_id: Optional[int], options: list[dict], session: Optional[Session] = None) -> RouletteSession:
+    db = session or SessionLocal()
+    try:
+        options_json = json.dumps(options)
+        session_obj = RouletteSession(created_by_account_id=created_by_account_id, options_json=options_json)
+        db.add(session_obj)
+        db.commit()
+        db.refresh(session_obj)
+        return session_obj
+    finally:
+        if session is None:
+            db.close()
+
+
+def get_roulette_session(session_id: int, session: Optional[Session] = None) -> Optional[RouletteSession]:
+    db = session or SessionLocal()
+    try:
+        return db.get(RouletteSession, session_id)
+    finally:
+        if session is None:
+            db.close()
+
+
+def record_roulette_spin(*, session_id: int, account_id: int, prize: dict, session: Optional[Session] = None) -> RouletteSpin:
+    db = session or SessionLocal()
+    try:
+        spin = RouletteSpin(session_id=session_id, account_id=account_id, prize_json=json.dumps(prize))
+        db.add(spin)
+        db.commit()
+        db.refresh(spin)
+        return spin
+    finally:
+        if session is None:
+            db.close()
+
+
+def record_roulette_decision(*, spin_id: int, account_id: int, engine_version: str, decision: dict, session: Optional[Session] = None) -> RouletteDecision:
+    db = session or SessionLocal()
+    try:
+        audit = RouletteDecision(
+            spin_id=spin_id,
+            account_id=account_id,
+            engine_version=engine_version,
+            decision_json=json.dumps(decision),
+        )
+        db.add(audit)
+        db.commit()
+        db.refresh(audit)
+        return audit
     finally:
         if session is None:
             db.close()

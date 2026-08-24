@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from sqlalchemy import (
@@ -33,7 +33,7 @@ class Account(Base):
 
     profile: Mapped[Optional["UserProfile"]] = relationship(back_populates="account", uselist=False, cascade="all, delete-orphan")
     auth_identities: Mapped[list["AuthIdentity"]] = relationship(back_populates="account", cascade="all, delete-orphan")
-    metadata: Mapped[list["AccountMetadata"]] = relationship(back_populates="account", cascade="all, delete-orphan")
+    account_metadata: Mapped[list["AccountMetadata"]] = relationship(back_populates="account", cascade="all, delete-orphan")
     balance: Mapped[Optional["AccountBalance"]] = relationship(back_populates="account", uselist=False, cascade="all, delete-orphan")
     ledger_entries: Mapped[list["AccountLedgerEntry"]] = relationship(back_populates="account", cascade="all, delete-orphan")
     posts: Mapped[list["Post"]] = relationship(back_populates="account", cascade="all, delete-orphan")
@@ -92,7 +92,7 @@ class AccountMetadata(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
 
-    account: Mapped[Account] = relationship(back_populates="metadata")
+    account: Mapped[Account] = relationship(back_populates="account_metadata")
 
 
 class AccountBalance(Base):
@@ -208,6 +208,59 @@ class PostMedia(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     post: Mapped[Post] = relationship(back_populates="media")
+
+
+class MediaFile(Base):
+    __tablename__ = "media_files"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    filename: Mapped[str] = mapped_column(String(500), nullable=False)
+    media_url: Mapped[str] = mapped_column(String(500), nullable=False)
+    media_type: Mapped[str] = mapped_column(String(20), default="image", nullable=False)
+    content_type: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class AdWatch(Base):
+    __tablename__ = "ad_watches"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False, index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class RouletteSession(Base):
+    __tablename__ = "roulette_sessions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    created_by_account_id: Mapped[Optional[int]] = mapped_column(ForeignKey("accounts.id"), nullable=True)
+    options_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+
+class RouletteSpin(Base):
+    __tablename__ = "roulette_spins"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    session_id: Mapped[int] = mapped_column(ForeignKey("roulette_sessions.id"), nullable=False, index=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False, index=True)
+    prize_json: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    session: Mapped[RouletteSession] = relationship()
+
+
+class RouletteDecision(Base):
+    __tablename__ = "roulette_decisions"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    spin_id: Mapped[int] = mapped_column(ForeignKey("roulette_spins.id"), nullable=False, unique=True)
+    account_id: Mapped[int] = mapped_column(ForeignKey("accounts.id"), nullable=False, index=True)
+    engine_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    decision_json: Mapped[str] = mapped_column(Text, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    spin: Mapped[RouletteSpin] = relationship()
 
 
 class Comment(Base):

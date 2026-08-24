@@ -28,6 +28,21 @@ def create_story(payload: StoryCreateRequest, current_user: str | None = Depends
     return {"story": story}
 
 
+@router.get("")
+def get_all_active_stories(current_user: str | None = Depends(get_optional_user)) -> dict:
+    stories = []
+    for story in service.stories:
+        if service.get_story(story['id']) is None:
+            continue
+        if story.get('expiresAt') and story['expiresAt'] <= service._now_iso():
+            continue
+        profile = profile_service.get_profile(story['creatorId'])
+        if profile and profile.get('isPrivate') and story['creatorId'] != current_user and not social_service.is_approved_follower(current_user or '', story['creatorId']):
+            continue
+        stories.append(story)
+    return {'stories': stories}
+
+
 @router.get("/by/{creator_id}")
 def get_stories_by_creator(creator_id: str, current_user: str | None = Depends(get_optional_user)) -> dict:
     profile = profile_service.get_profile(creator_id)

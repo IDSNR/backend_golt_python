@@ -24,13 +24,13 @@ def test_purchases_route() -> None:
 
 
 def test_referrals_route() -> None:
-    response = client.post("/referrals", json={"referrerId": "user-1", "inviteeId": "user-2"})
+    response = client.post("/referrals", headers={"X-User-Id": "user-2"}, json={"referrerId": "user-1", "inviteeId": "spoofed-user"})
     assert response.status_code == 201
     assert response.json()["referral"]["inviteeId"] == "user-2"
 
 
 def test_reports_route() -> None:
-    response = client.post("/reports", json={"targetType": "content", "targetId": "content-1", "reason": "spam"})
+    response = client.post("/reports", headers={"X-User-Id": "user-10"}, json={"targetType": "content", "targetId": "content-1", "reason": "spam"})
     assert response.status_code == 201
     assert response.json()["report"]["reason"] == "spam"
 
@@ -55,6 +55,6 @@ def test_stories_route() -> None:
 
 def test_media_upload_route() -> None:
     files = {"file": ("image.png", b"fake-image", "image/png")}
-    response = client.post("/media/upload", files=files)
+    response = client.post("/media/upload", headers={"X-User-Id": "user-10"}, files=files)
     assert response.status_code == 201
-    assert response.json()["media"]["filename"] == "image.png"
+    assert response.json()["media"]["originalFilename"] == "image.png"

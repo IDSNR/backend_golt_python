@@ -19,6 +19,7 @@ from .models import (
     Post,
     PostMedia,
     Report,
+    RouletteDecision,
     Story,
     UserProfile,
 )
@@ -68,6 +69,7 @@ __all__ = [
     "Post",
     "PostMedia",
     "Report",
+    "RouletteDecision",
     "Story",
     "UserProfile",
     "create_account_and_profile",
