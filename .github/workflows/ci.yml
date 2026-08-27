@@ -1,0 +1,43 @@
+name: Backend CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.12"
+          - "3.14"
+
+    env:
+      MEDIA_FOLDER: ${{ runner.temp }}/golt-test-media
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install dependencies
+        run: python -m pip install --requirement requirements.txt
+
+      - name: Prepare isolated test media directory
+        run: mkdir -p "$MEDIA_FOLDER"
+
+      - name: Run API tests
+        run: python -m pytest -q
