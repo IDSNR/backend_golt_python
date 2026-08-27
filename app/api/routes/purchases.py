@@ -1,20 +1,19 @@
-from fastapi import APIRouter, Header, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, status
+from pydantic import BaseModel, Field
 
-from app.modules.commerce.service import CommerceService
+from app.api.dependencies import get_current_user
+from app.services import commerce_service
 
 router = APIRouter(prefix="/purchases", tags=["purchases"])
-service = CommerceService()
+service = commerce_service
 
 
 class PurchaseCreateRequest(BaseModel):
     contentId: str
-    amountCents: int = 0
+    amountCents: int = Field(gt=0)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_purchase(payload: PurchaseCreateRequest, x_user_id: str | None = Header(default=None)) -> dict:
-    if x_user_id is None:
-        raise HTTPException(status_code=401, detail="Missing X-User-Id header")
-    purchase = service.create_purchase(x_user_id, payload.model_dump())
+def create_purchase(payload: PurchaseCreateRequest, current_user: str = Depends(get_current_user)) -> dict:
+    purchase = service.create_purchase(current_user, payload.model_dump())
     return {"purchase": purchase}

@@ -18,6 +18,7 @@ def test_notifications_route() -> None:
 
 
 def test_purchases_route() -> None:
+    assert client.post("/purchases", json={"contentId": "content-1", "amountCents": 700}).status_code == 401
     response = client.post("/purchases", headers={"X-User-Id": "user-10"}, json={"contentId": "content-1", "amountCents": 700})
     assert response.status_code == 201
     assert response.json()["purchase"]["status"] == "completed"
@@ -36,13 +37,16 @@ def test_reports_route() -> None:
 
 
 def test_sends_route() -> None:
-    response = client.post("/sends", json={"senderId": "user-1", "recipientId": "user-2", "amountCents": 100})
+    assert client.post("/sends", json={"senderId": "spoofed", "recipientId": "user-2", "amountCents": 100}).status_code == 401
+    response = client.post("/sends", headers={"X-User-Id": "user-1"}, json={"senderId": "spoofed", "recipientId": "user-2", "amountCents": 100})
     assert response.status_code == 201
     assert response.json()["send"]["amountCents"] == 100
+    assert response.json()["send"]["senderId"] == "user-1"
 
 
 def test_subscriptions_route() -> None:
-    response = client.post("/subscriptions", json={"creatorId": "creator-1", "amountCents": 500})
+    assert client.post("/subscriptions", json={"creatorId": "creator-1", "amountCents": 500}).status_code == 401
+    response = client.post("/subscriptions", headers={"X-User-Id": "subscriber-1"}, json={"creatorId": "creator-1", "amountCents": 500})
     assert response.status_code == 201
     assert response.json()["subscription"]["status"] == "active"
 
