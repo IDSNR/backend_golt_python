@@ -1,10 +1,12 @@
 from datetime import datetime, timezone
+import os
 
 
 class SocialService:
     def __init__(self) -> None:
         self.follow_requests: list[dict] = []
         self.followers: dict[str, set[str]] = {}
+        self.persistence = os.getenv('PERSISTENCE_ENABLED', 'false').lower() == 'true'
 
     def _now_iso(self) -> str:
         return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace('+00:00', 'Z')
@@ -26,6 +28,10 @@ class SocialService:
             request['status'] = 'approved'
             self.followers.setdefault(followee_id, set()).add(follower_id)
 
+        if self.persistence:
+            from data_management.repositories import repository
+            repository.follow(follower_id, followee_id, request['status'])
+
         return request
 
     def list_follow_requests(self, followee_id: str) -> list[dict]:
@@ -41,6 +47,9 @@ class SocialService:
                     raise ValueError('Follow request not found')
                 request['status'] = 'approved'
                 self.followers.setdefault(request['followeeId'], set()).add(request['followerId'])
+                if self.persistence:
+                    from data_management.repositories import repository
+                    repository.follow(request['followerId'], request['followeeId'], 'approved')
                 return request
         raise ValueError('Follow request not found')
 
@@ -78,22 +87,37 @@ class SocialService:
         return request
 
     def unfollow(self, follower_id: str, followee_id: str) -> None:
+        if self.persistence:
+            from data_management.repositories import repository
+            repository.follow(follower_id, followee_id, 'removed')
         followers = self.followers.get(followee_id)
         if followers and follower_id in followers:
             followers.remove(follower_id)
 
     def is_approved_follower(self, viewer_id: str, creator_id: str) -> bool:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.relationship_status(viewer_id, creator_id) == 'following'
         return viewer_id in self.followers.get(creator_id, set())
 
     def follower_count(self, followee_id: str) -> int:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.follower_count(followee_id)
         return len(self.followers.get(followee_id, set()))
 
     def following_count(self, follower_id: str) -> int:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.following_count(follower_id)
         return sum(1 for followers in self.followers.values() if follower_id in followers)
 
     def relationship_status(self, viewer_id: str | None, profile_id: str) -> str:
         if viewer_id is None:
             return 'none'
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.relationship_status(viewer_id, profile_id)
         if self.is_approved_follower(viewer_id, profile_id):
             return 'following'
         request = self.get_request_for(profile_id, viewer_id)

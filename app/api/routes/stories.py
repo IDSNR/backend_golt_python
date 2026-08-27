@@ -16,10 +16,8 @@ class StoryCreateRequest(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_story(payload: StoryCreateRequest, current_user: str | None = Depends(get_optional_user)) -> dict:
-    creator_id = current_user or payload.creatorId
-    if creator_id is None:
-        raise HTTPException(status_code=401, detail="Missing X-User-Id header")
+def create_story(payload: StoryCreateRequest, current_user: str = Depends(get_current_user)) -> dict:
+    creator_id = current_user
     if not payload.mediaUrl.strip():
         raise HTTPException(status_code=400, detail="mediaUrl is required")
     story_payload = payload.model_dump()

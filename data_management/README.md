@@ -22,6 +22,7 @@ Set these before running:
 
 ```bash
 export DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/golt
+export PERSISTENCE_ENABLED=true
 ```
 
 ## Basic usage
@@ -47,6 +48,8 @@ update_user_profile(
     website_url="https://newsite.com",
 )
 ```
+
+The active API services use `data_management.repositories.repository` when `PERSISTENCE_ENABLED=true`. This repository persists accounts, profiles, posts, follows, likes, bookmarks, shares, and comments in the `platform_*` tables. With persistence disabled, the existing in-memory development fallback remains available for isolated tests.
 
 ## Core functions
 
