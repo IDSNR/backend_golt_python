@@ -8,6 +8,8 @@ from app.modules.commerce.service import CommerceService
 from app.modules.subscriptions.service import SubscriptionService
 from app.modules.dms import direct_message_service
 from app.modules.media import media_service
+from app.modules.push import push_notification_service
+from app.modules.realtime import realtime_service
 
 profile_service = ProfileService()
 content_service = ContentService()
@@ -19,3 +21,5 @@ commerce_service = CommerceService()
 subscription_service = SubscriptionService()
 direct_message_service = direct_message_service
 media_service = media_service
+push_notification_service = push_notification_service
+realtime_service = realtime_service

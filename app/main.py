@@ -25,6 +25,7 @@ from app.api.routes.follows import router as follows_router
 from app.api.routes.search import router as search_router
 from app.api.routes.dms import router as dms_router
 from app.api.routes.roulette import router as roulette_router
+from app.api.routes.realtime import router as realtime_router
 
 app = FastAPI(title="PartnerHub Python Backend")
 
@@ -58,6 +59,7 @@ app.include_router(roulette_router)
 app.include_router(feed_router)
 app.include_router(follows_router)
 app.include_router(media_router)
+app.include_router(realtime_router)
 
 # Serve uploaded media files from disk
 app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")
