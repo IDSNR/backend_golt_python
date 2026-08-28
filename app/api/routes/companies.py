@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Header, HTTPException, status
+from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel
+from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/companies", tags=["companies"])
 
@@ -10,7 +11,5 @@ class CompanyCreateRequest(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_company(payload: CompanyCreateRequest, x_user_id: str | None = Header(default=None)) -> dict:
-    if x_user_id is None:
-        raise HTTPException(status_code=401, detail="Missing X-User-Id header")
-    return {"company": {"id": f"company-{payload.handle}", "name": payload.name, "handle": payload.handle, "ownerId": x_user_id}}
+def create_company(payload: CompanyCreateRequest, current_user: str = Depends(get_current_user)) -> dict:
+    return {"company": {"id": f"company-{payload.handle}", "name": payload.name, "handle": payload.handle, "ownerId": current_user}}
