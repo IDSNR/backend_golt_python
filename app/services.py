@@ -8,7 +8,7 @@ from app.modules.commerce.service import CommerceService
 from app.modules.subscriptions.service import SubscriptionService
 from app.modules.access import ContentAccessService
 from app.modules.dms import direct_message_service
-from app.modules.media import media_service
+from app.modules.media import media_service, media_storage
 
 profile_service = ProfileService()
 content_service = ContentService()
@@ -21,3 +21,4 @@ subscription_service = SubscriptionService()
 content_access_service = ContentAccessService(profile_service, social_service, subscription_service)
 direct_message_service = direct_message_service
 media_service = media_service
+media_storage = media_storage

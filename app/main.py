@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -73,5 +74,6 @@ app.include_router(follows_router)
 app.include_router(media_router)
 app.include_router(admin_router)
 
-# Serve uploaded media files from disk
-app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")
+if settings.media_storage_backend == "local":
+    Path(settings.media_folder).mkdir(parents=True, exist_ok=True)
+    app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")
