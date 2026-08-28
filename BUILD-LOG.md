@@ -1,8 +1,27 @@
 # BUILD-LOG
 
+## 2026-08-27 — Active API PostgreSQL repositories and migration
+
+- Added `data_management/runtime_schema.py` for API-compatible string-ID tables covering accounts, profiles, posts, follows, engagements, and comments.
+- Added `data_management/repositories.py` with SQLAlchemy repository operations for account/profile/post persistence, follows, likes, bookmarks, shares, comments, counts, and relationship state.
+- Wired active authentication, profile, content, social, and engagement services to the repository when `PERSISTENCE_ENABLED=true`; development fallback remains available when explicitly disabled.
+- Added repeatable PostgreSQL migration `data_management/migrations/0001_platform_runtime.sql` and documented the migration workflow.
+- Extended SQLAlchemy initialization to include the runtime API schema and made repeated account/profile/post initialization idempotent.
+- Verified a fresh-database repository smoke test and restart/idempotency test. Full backend suite: **32 passed**.
+- The repository is ready for local PostgreSQL activation, but this environment still has no `backend/.env`/`DATABASE_URL`, so no live PostgreSQL connection was attempted.
+
+## 2026-08-27 — Local database connection wiring
+
+- Configured the backend connector to load `backend/.env` and read `DATABASE_URL` without committing credentials.
+- Added optional SQLAlchemy table initialization through `DB_AUTO_CREATE=true` and an explicit `python -m data_management` initializer.
+- Added `GET /health/database` to verify PostgreSQL connectivity without exposing connection details.
+- Replaced the deprecated FastAPI startup event with the supported lifespan handler.
+- Verified backend import and the complete test suite: **32 passed**.
+- Local database probe currently returns `status: unavailable` because this workspace still has no configured `DATABASE_URL` and no reachable local PostgreSQL listener. The project-side wiring is ready; the local `.env` values remain to be supplied.
+
 ## 2026-08-24 — Security and Phase A foundation fixes
 
-- Replaced deterministic Bearer-as-user-id behavior with random server-side sessions that expire after seven days and support logout revocation. The explicit `X-User-Id` path remains available for local development compatibility; production Bearer tokens must be issued sessions.
+- Replaced deterministic Bearer-as-user-id behavior with random server-side sessions that expire after seven days and support logout revocation. Authentication now requires validated Bearer sessions in every environment; the legacy `X-User-Id` path has been removed.
 - Enforced authenticated actors on reports, referrals, legacy social follows, and follow-request approval; aligned the legacy social route with the shared social service.
 - Added private-profile filtering to aggregate feeds and active stories, plus 24-hour story expiration metadata and filtering.
 - Hardened media upload with authenticated ownership, allowlisted image/video MIME types, a 50 MB size limit, collision-resistant filenames, and original filename metadata.

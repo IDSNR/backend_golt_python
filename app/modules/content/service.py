@@ -1,9 +1,11 @@
 from datetime import datetime, timezone
+import os
 
 
 class ContentService:
     def __init__(self) -> None:
         self.posts: list[dict] = []
+        self.persistence = os.getenv('PERSISTENCE_ENABLED', 'false').lower() == 'true'
         self.create_post('user-1', {
             'caption': 'Golden hour in the city.',
             'mediaItems': [
@@ -34,12 +36,23 @@ class ContentService:
             'completions': 0,
         }
         self.posts.append(post)
+        if self.persistence:
+            from data_management.repositories import repository
+            if repository.get_account(author_id) is None:
+                repository.create_account(author_id, None, author_id, None, 'profile')
+            repository.create_post(post)
         return post
 
     def list_posts(self) -> list[dict]:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.list_posts()
         return sorted(self.posts, key=lambda post: post['created_at'], reverse=True)
 
     def list_posts_by_creator(self, creator_id: str) -> list[dict]:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.list_posts(creator_id)
         return sorted(
             [post for post in self.posts if post['creatorId'] == creator_id],
             key=lambda post: post['created_at'],
@@ -47,7 +60,13 @@ class ContentService:
         )
 
     def get_post(self, content_id: str) -> dict | None:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.get_post(content_id)
         return next((post for post in self.posts if post['id'] == content_id), None)
 
     def list_public_posts(self) -> list[dict]:
+        if self.persistence:
+            from data_management.repositories import repository
+            return repository.list_posts(public_only=True)
         return [post for post in self.posts if post.get('visibility') == 'public']

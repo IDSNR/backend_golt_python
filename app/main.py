@@ -1,8 +1,11 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
+from data_management.database import init_db
 from app.api.health import router as health_router
 from app.api.routes.profiles import router as profiles_router
 from app.api.routes.wallet import router as wallet_router
@@ -25,8 +28,18 @@ from app.api.routes.follows import router as follows_router
 from app.api.routes.search import router as search_router
 from app.api.routes.dms import router as dms_router
 from app.api.routes.roulette import router as roulette_router
+from app.api.routes.admin import router as admin_router
+from app.core.rate_limit import RateLimitMiddleware
 
-app = FastAPI(title="PartnerHub Python Backend")
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    if settings.db_auto_create:
+        init_db()
+    yield
+
+
+app = FastAPI(title="PartnerHub Python Backend", lifespan=lifespan)
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
@@ -58,6 +71,7 @@ app.include_router(roulette_router)
 app.include_router(feed_router)
 app.include_router(follows_router)
 app.include_router(media_router)
+app.include_router(admin_router)
 
 # Serve uploaded media files from disk
 app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")

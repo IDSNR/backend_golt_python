@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, status
 from pydantic import BaseModel, Field
-
 from app.api.dependencies import get_current_user
 
 router = APIRouter(prefix="/companies", tags=["companies"])
