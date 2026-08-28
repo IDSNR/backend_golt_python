@@ -5,12 +5,14 @@ from starlette.websockets import WebSocketDisconnect
 
 from app.modules.push import service as push_module
 from app.modules.push.service import PushNotificationService
+from app.modules.auth.service import auth_service
 from app.main import app
 from app.services import direct_message_service, push_notification_service
+from conftest import auth_headers
 
 
 client = TestClient(app)
-AUTH_USER_1 = {"Authorization": "Bearer user-1"}
+AUTH_USER_1 = auth_headers("user-1")
 
 
 def test_push_token_registration_requires_authentication_and_validates_token() -> None:
@@ -81,7 +83,7 @@ def test_direct_message_is_delivered_to_connected_recipient() -> None:
     thread = direct_message_service.create_thread("user-1", "user-2", "Initial message")
 
     with client.websocket_connect("/realtime") as websocket:
-        websocket.send_json({"type": "authenticate", "token": "user-2"})
+        websocket.send_json({"type": "authenticate", "token": auth_service._issue_session("user-2")})
         assert websocket.receive_json() == {"type": "connected"}
 
         response = client.post(

@@ -19,9 +19,7 @@ class LoginRequest(BaseModel):
 
 
 class GoogleAuthRequest(BaseModel):
-    email: str
-    displayName: str | None = None
-    googleId: str
+    idToken: str
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
@@ -46,11 +44,10 @@ def login(payload: LoginRequest):
 
 @router.post("/google")
 def google_auth(payload: GoogleAuthRequest):
-    return auth_service.handle_google_auth(
-        email=payload.email,
-        display_name=payload.displayName or "Google user",
-        google_id=payload.googleId,
-    )
+    try:
+        return auth_service.authenticate_google_token(payload.idToken)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
 
 @router.post("/logout")
