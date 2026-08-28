@@ -74,6 +74,8 @@ app.include_router(follows_router)
 app.include_router(media_router)
 app.include_router(admin_router)
 
+# A fresh checkout does not contain the ignored upload folder. Create it before
+# StaticFiles validates the path when local development storage is selected.
 if settings.media_storage_backend == "local":
     Path(settings.media_folder).mkdir(parents=True, exist_ok=True)
     app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")
