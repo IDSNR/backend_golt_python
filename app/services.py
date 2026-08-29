@@ -9,7 +9,6 @@ from app.modules.subscriptions.service import SubscriptionService
 from app.modules.access import ContentAccessService
 from app.modules.dms import direct_message_service
 from app.modules.media import media_service, media_storage
-from app.modules.media import media_service
 from app.modules.push import push_notification_service
 from app.modules.realtime import realtime_service
 
