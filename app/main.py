@@ -29,6 +29,7 @@ from app.api.routes.follows import router as follows_router
 from app.api.routes.search import router as search_router
 from app.api.routes.dms import router as dms_router
 from app.api.routes.roulette import router as roulette_router
+from app.api.routes.realtime import router as realtime_router
 from app.api.routes.admin import router as admin_router
 from app.core.rate_limit import RateLimitMiddleware
 
@@ -72,6 +73,7 @@ app.include_router(roulette_router)
 app.include_router(feed_router)
 app.include_router(follows_router)
 app.include_router(media_router)
+app.include_router(realtime_router)
 app.include_router(admin_router)
 
 # A fresh checkout does not contain the ignored upload folder. Create it before

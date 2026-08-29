@@ -15,6 +15,8 @@ class Settings:
     frontend_origins: List[str] = None
     media_folder: str = os.getenv("MEDIA_FOLDER", str(Path(__file__).resolve().parents[2] / "media_files"))
     media_url_path: str = os.getenv("MEDIA_URL_PATH", "/media/files")
+    expo_push_url: str = os.getenv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send")
+    expo_push_access_token: str | None = os.getenv("EXPO_PUSH_ACCESS_TOKEN")
     database_url: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/golt")
     db_auto_create: bool = os.getenv("DB_AUTO_CREATE", "false").lower() == "true"
 
