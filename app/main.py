@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
@@ -72,6 +73,10 @@ app.include_router(feed_router)
 app.include_router(follows_router)
 app.include_router(media_router)
 app.include_router(admin_router)
+
+# A fresh checkout does not contain the ignored upload folder. Create it before
+# StaticFiles validates the path so local development and CI can start cleanly.
+Path(settings.media_folder).mkdir(parents=True, exist_ok=True)
 
 # Serve uploaded media files from disk
 app.mount(settings.media_url_path, StaticFiles(directory=settings.media_folder), name="media")
