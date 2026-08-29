@@ -21,7 +21,7 @@ jobs:
           - "3.14"
 
     env:
-      MEDIA_FOLDER: ${{ runner.temp }}/golt-test-media
+      MEDIA_FOLDER: /tmp/golt-test-media
 
     steps:
       - name: Check out repository
