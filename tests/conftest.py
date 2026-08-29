@@ -1,5 +1,10 @@
+import os
 import sys
+import tempfile
 from pathlib import Path
+
+_MEDIA_TEMP_DIRECTORY = tempfile.TemporaryDirectory(prefix="golt-test-media-")
+os.environ.setdefault("MEDIA_FOLDER", _MEDIA_TEMP_DIRECTORY.name)
 
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
