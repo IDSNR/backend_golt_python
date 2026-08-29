@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from app.api.dependencies import get_current_user, get_optional_user
+from app.api.dependencies import get_current_user
 from app.services import notification_service, subscription_service
 
 router = APIRouter(prefix="/subscriptions", tags=["subscriptions"])
@@ -17,8 +17,8 @@ class PlanUpdateRequest(BaseModel):
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
-def create_subscription(payload: SubscriptionCreateRequest, current_user: str | None = Depends(get_optional_user)) -> dict:
-    subscriber_profile_id = current_user or 'anonymous'
+def create_subscription(payload: SubscriptionCreateRequest, current_user: str = Depends(get_current_user)) -> dict:
+    subscriber_profile_id = current_user
     try:
         subscription = subscription_service.subscribe(subscriber_profile_id, payload.creatorId)
     except ValueError as exc:

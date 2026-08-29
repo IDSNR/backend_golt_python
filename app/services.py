@@ -9,6 +9,9 @@ from app.modules.subscriptions.service import SubscriptionService
 from app.modules.access import ContentAccessService
 from app.modules.dms import direct_message_service
 from app.modules.media import media_service, media_storage
+from app.modules.media import media_service
+from app.modules.push import push_notification_service
+from app.modules.realtime import realtime_service
 
 profile_service = ProfileService()
 content_service = ContentService()
@@ -22,3 +25,5 @@ content_access_service = ContentAccessService(profile_service, social_service, s
 direct_message_service = direct_message_service
 media_service = media_service
 media_storage = media_storage
+push_notification_service = push_notification_service
+realtime_service = realtime_service

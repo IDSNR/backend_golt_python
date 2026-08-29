@@ -23,6 +23,8 @@ class Settings:
     object_storage_endpoint_url: str | None = os.getenv("OBJECT_STORAGE_ENDPOINT_URL")
     object_storage_access_key_id: str | None = os.getenv("OBJECT_STORAGE_ACCESS_KEY_ID")
     object_storage_secret_access_key: str | None = os.getenv("OBJECT_STORAGE_SECRET_ACCESS_KEY")
+    expo_push_url: str = os.getenv("EXPO_PUSH_URL", "https://exp.host/--/api/v2/push/send")
+    expo_push_access_token: str | None = os.getenv("EXPO_PUSH_ACCESS_TOKEN")
     database_url: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/golt")
     db_auto_create: bool = os.getenv("DB_AUTO_CREATE", "false").lower() == "true"
 

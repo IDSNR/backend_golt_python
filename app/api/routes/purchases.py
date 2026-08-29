@@ -1,16 +1,16 @@
 from fastapi import APIRouter, Depends, status
-from pydantic import BaseModel
-from app.api.dependencies import get_current_user
+from pydantic import BaseModel, Field
 
-from app.modules.commerce.service import CommerceService
+from app.api.dependencies import get_current_user
+from app.services import commerce_service
 
 router = APIRouter(prefix="/purchases", tags=["purchases"])
-service = CommerceService()
+service = commerce_service
 
 
 class PurchaseCreateRequest(BaseModel):
     contentId: str
-    amountCents: int = 0
+    amountCents: int = Field(gt=0)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
