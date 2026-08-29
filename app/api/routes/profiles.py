@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.dependencies import get_current_user, get_optional_user
-from app.services import profile_service, content_service, social_service
+from app.services import content_access_service, profile_service, content_service, social_service
 
 router = APIRouter(prefix="/profiles", tags=["profiles"])
 
@@ -70,13 +70,10 @@ def get_profile_by_handle(handle: str, current_user: str | None = Depends(get_op
         raise HTTPException(status_code=404, detail="Profile not found")
 
     creator_id = profile["id"]
-    if profile.get("isPrivate") and current_user is not None:
-        allowed = social_service.is_approved_follower(current_user, creator_id)
-        content = content_service.list_posts_by_creator(creator_id) if allowed else []
-    elif profile.get("isPrivate") and current_user is None:
-        content = []
-    else:
-        content = content_service.list_posts_by_creator(creator_id)
+    content = [
+        post for post in content_service.list_posts_by_creator(creator_id)
+        if content_access_service.can_view_post(current_user, post)
+    ]
 
     return {"profile": _enrich_profile(profile, current_user), "content": content}
 

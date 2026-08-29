@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
 from app.api.dependencies import get_optional_user
-from app.services import content_service, profile_service
+from app.services import content_access_service, content_service, profile_service
 
 router = APIRouter(prefix="/search", tags=["search"])
 
@@ -19,8 +19,9 @@ def search(query: str, current_user: str | None = Depends(get_optional_user)) ->
         if query_lower in profile.get('handle', '').lower() or query_lower in (profile.get('displayName') or '').lower()
     ]
     posts = [
-        post for post in content_service.list_public_posts()
-        if query_lower in (post.get('caption') or '').lower()
+        post for post in content_service.list_posts()
+        if content_access_service.can_view_post(current_user, post)
+        and query_lower in (post.get('caption') or '').lower()
     ]
     return {
         'profiles': profiles,
