@@ -9,15 +9,17 @@ class WalletService:
         return self._get_balance(user_id)
 
     def withdraw(self, user_id: str, amount_cents: int) -> int:
-        if amount_cents < 0:
-            raise ValueError('amountCents must be a non-negative integer')
+        if amount_cents <= 0:
+            raise ValueError('amountCents must be a positive integer')
         current = self._get_balance(user_id)
-        self.balances[user_id] = max(0, current - amount_cents)
+        if amount_cents > current:
+            raise ValueError('Insufficient wallet balance')
+        self.balances[user_id] = current - amount_cents
         return self.balances[user_id]
 
     def boost_purchase(self, user_id: str, cost_cents: int) -> dict:
-        if cost_cents < 0:
-            raise ValueError('costCents must be a non-negative integer')
+        if cost_cents <= 0:
+            raise ValueError('costCents must be a positive integer')
         current = self._get_balance(user_id)
         if current >= cost_cents:
             self.balances[user_id] = current - cost_cents
