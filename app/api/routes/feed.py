@@ -1,9 +1,10 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.api.dependencies import get_current_user, get_optional_user
-from app.services import content_service, profile_service
-from app.services import social_service
+from app.services import content_access_service, content_service, profile_service, social_service
 
 router = APIRouter(prefix="/feed", tags=["feed"])
 
@@ -13,9 +14,23 @@ class FeedViewRequest(BaseModel):
 
 
 @router.get("")
-def get_feed(current_user: str | None = Depends(get_optional_user)) -> dict:
+def get_feed(
+    mode: Literal["for_you", "following"] = "for_you",
+    current_user: str | None = Depends(get_optional_user),
+) -> dict:
+    if mode == "following" and current_user is None:
+        raise HTTPException(status_code=401, detail="Sign in to view the Following feed")
+
+    posts = content_service.list_public_posts()
+    if mode == "following":
+        posts = [
+            post for post in content_service.list_posts()
+            if social_service.is_approved_follower(current_user or "", post["creatorId"])
+            and content_access_service.can_view_post(current_user, post)
+        ]
+
     feed = []
-    for post in content_service.list_public_posts():
+    for post in posts:
         creator = profile_service.get_profile(post['creatorId'])
         if creator is not None and creator.get('isPrivate') and creator['id'] != current_user and not social_service.is_approved_follower(current_user or '', creator['id']):
             continue
@@ -27,7 +42,7 @@ def get_feed(current_user: str | None = Depends(get_optional_user)) -> dict:
                 'creatorAvatarUrl': creator.get('avatarUrl'),
             })
         feed.append(enriched)
-    return {'feed': feed}
+    return {'feed': feed, 'mode': mode}
 
 
 @router.post("/{content_id}/view", status_code=status.HTTP_201_CREATED)
