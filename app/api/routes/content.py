@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Literal
 
 from app.api.dependencies import get_current_user, get_optional_user
-from app.services import content_access_service, content_service
+from app.services import affiliate_service, content_access_service, content_service
 
 router = APIRouter(prefix="/content", tags=["content"])
 
@@ -17,7 +17,8 @@ class ContentCreateRequest(BaseModel):
 
 class AffiliateLinkRequest(BaseModel):
     productUrl: str
-    retailer: str | None = None
+    provider: Literal["amazon"] = "amazon"
+    title: str
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -60,12 +61,24 @@ def create_affiliate_link(content_id: str, payload: AffiliateLinkRequest, curren
     post = content_service.get_post(content_id)
     if post is None or post["creatorId"] != current_user:
         raise HTTPException(status_code=404, detail="Content not found")
-    return {
-        "link": {
-            "id": f"affiliate-{content_id}-{len(content_service.posts) + 1}",
-            "content_id": content_id,
-            "product_url": payload.productUrl,
-            "retailer": payload.retailer,
-            "affiliate_url": f"https://partnerhub.app/go/{content_id}",
-        }
-    }
+    try:
+        link = affiliate_service.create_offer(content_id, current_user, payload.model_dump())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"link": link}
+
+
+@router.get("/{content_id}/affiliate-links")
+def list_affiliate_links(content_id: str, current_user: str | None = Depends(get_optional_user)) -> dict:
+    post = content_service.get_post(content_id)
+    if post is None or not content_access_service.can_view_post(current_user, post):
+        raise HTTPException(status_code=404, detail="Content not found")
+    return {"links": affiliate_service.list_content_offers(content_id)}
+
+
+@router.get("/{content_id}/affiliate-attribution")
+def get_affiliate_attribution(content_id: str, current_user: str = Depends(get_current_user)) -> dict:
+    post = content_service.get_post(content_id)
+    if post is None or post["creatorId"] != current_user:
+        raise HTTPException(status_code=404, detail="Content not found")
+    return {"attribution": affiliate_service.creator_attribution(content_id, current_user)}

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 from app.api.dependencies import get_current_user, get_optional_user
-from app.services import content_service, profile_service
+from app.services import affiliate_service, content_service, profile_service
 from app.services import social_service
 
 router = APIRouter(prefix="/feed", tags=["feed"])
@@ -26,6 +26,7 @@ def get_feed(current_user: str | None = Depends(get_optional_user)) -> dict:
                 'creatorDisplayName': creator.get('displayName'),
                 'creatorAvatarUrl': creator.get('avatarUrl'),
             })
+        enriched['affiliateOffers'] = affiliate_service.list_content_offers(post['id'])
         feed.append(enriched)
     return {'feed': feed}
 

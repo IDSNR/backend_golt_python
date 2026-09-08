@@ -19,6 +19,9 @@ class Settings:
     expo_push_access_token: str | None = os.getenv("EXPO_PUSH_ACCESS_TOKEN")
     database_url: str = os.getenv("DATABASE_URL", "postgresql+psycopg2://postgres:postgres@localhost:5432/golt")
     db_auto_create: bool = os.getenv("DB_AUTO_CREATE", "false").lower() == "true"
+    app_environment: str = os.getenv("APP_ENV", "development").lower()
+    affiliate_outbound_enabled: bool = os.getenv("AFFILIATE_OUTBOUND_ENABLED", "false").lower() == "true"
+    amazon_associates_tags: str = os.getenv("AMAZON_ASSOCIATES_TAGS", "")
 
     def __post_init__(self):
         if self.frontend_origins is None:
