@@ -1,5 +1,15 @@
 # BUILD-LOG
 
+## 2026-09-13 — Running-app integration and Expo Go debugging
+
+- Synchronized the backend, mobile app, and public website with their current remote default branches before testing.
+- Ran the backend as a live development server with permanent database storage and real affiliate redirects disabled.
+- Completed a two-user journey through signup, publishing, feed delivery, Amazon test-mode click attribution, community creation/joining, and two-way direct messaging.
+- Verified the authenticated realtime-message and Expo push-token behavior with the automated socket tests.
+- Ran every backend test file in a fresh process so the shared development rate limiter could not leak state between unrelated test files: **51 passed and 1 live-PostgreSQL test skipped**.
+- Confirmed `requirements.txt` already requests `uvicorn[standard]`, which supplies production WebSocket support. This PC's older virtual environment is missing that optional runtime and must be refreshed before a direct local WebSocket upgrade can run; the code-level WebSocket test passes.
+- Did not change permanent PostgreSQL activation, migrations/repositories, Google OAuth, moderation, rate limiting, admin tools, database end-to-end behavior, or authentication compatibility behavior.
+
 ## 2026-09-08 — Amazon-first affiliate commerce foundation
 
 - Replaced the fake, nonpersistent affiliate-link response with an in-memory affiliate offer and click-attribution service.
