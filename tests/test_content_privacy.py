@@ -101,7 +101,7 @@ def test_visibility_validation_and_affiliate_link_ownership() -> None:
         "videoUrl": "https://example.com/affiliate.mp4",
         "visibility": "public",
     })
-    payload = {"productUrl": "https://shop.example/item"}
+    payload = {"productUrl": "https://www.amazon.es/dp/B000000001", "title": "Test product"}
     assert client.post(
         f"/content/{post['id']}/affiliate-links",
         headers=auth_headers(outsider_id),

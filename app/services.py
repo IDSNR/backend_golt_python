@@ -11,6 +11,8 @@ from app.modules.dms import direct_message_service
 from app.modules.media import media_service
 from app.modules.push import push_notification_service
 from app.modules.realtime import realtime_service
+from app.modules.affiliate import AffiliateService
+from app.core.config import settings
 
 profile_service = ProfileService()
 content_service = ContentService()
@@ -25,3 +27,8 @@ direct_message_service = direct_message_service
 media_service = media_service
 push_notification_service = push_notification_service
 realtime_service = realtime_service
+affiliate_service = AffiliateService(
+    outbound_enabled=settings.affiliate_outbound_enabled,
+    app_environment=settings.app_environment,
+    amazon_tags=settings.amazon_associates_tags,
+)

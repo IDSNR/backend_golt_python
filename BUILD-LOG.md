@@ -1,5 +1,25 @@
 # BUILD-LOG
 
+## 2026-09-13 — Running-app integration and Expo Go debugging
+
+- Synchronized the backend, mobile app, and public website with their current remote default branches before testing.
+- Ran the backend as a live development server with permanent database storage and real affiliate redirects disabled.
+- Completed a two-user journey through signup, publishing, feed delivery, Amazon test-mode click attribution, community creation/joining, and two-way direct messaging.
+- Verified the authenticated realtime-message and Expo push-token behavior with the automated socket tests.
+- Ran every backend test file in a fresh process so the shared development rate limiter could not leak state between unrelated test files: **51 passed and 1 live-PostgreSQL test skipped**.
+- Confirmed `requirements.txt` already requests `uvicorn[standard]`, which supplies production WebSocket support. This PC's older virtual environment is missing that optional runtime and must be refreshed before a direct local WebSocket upgrade can run; the code-level WebSocket test passes.
+- Did not change permanent PostgreSQL activation, migrations/repositories, Google OAuth, moderation, rate limiting, admin tools, database end-to-end behavior, or authentication compatibility behavior.
+
+## 2026-09-08 — Amazon-first affiliate commerce foundation
+
+- Replaced the fake, nonpersistent affiliate-link response with an in-memory affiliate offer and click-attribution service.
+- Added creator-owned product attachment, visibility-aware product lookup and opening, safe feed product cards, and creator-only attribution totals.
+- Limited the first provider to direct HTTPS Amazon product-detail links from supported marketplaces. Creator query parameters and personal affiliate tags are removed before storage.
+- Added production safety controls. Live outbound affiliate links require an explicit feature flag and a Golt-owned tracking ID for the selected Amazon marketplace; otherwise production returns a configuration error.
+- Kept clicks separate from orders and commission. Confirmed orders and creator earnings remain zero until Amazon reports are connected and reconciled.
+- Added focused tests for ownership, private-content access, unsafe links, tag replacement, preview mode, feed safety, and zero-until-confirmed attribution.
+- Did not change PostgreSQL activation, migrations, Google OAuth, moderation, rate limiting, admin tools, database end-to-end tests, or authentication compatibility behavior.
+
 ## 2026-08-27 — Active API PostgreSQL repositories and migration
 
 - Added `data_management/runtime_schema.py` for API-compatible string-ID tables covering accounts, profiles, posts, follows, engagements, and comments.

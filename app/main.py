@@ -31,6 +31,7 @@ from app.api.routes.dms import router as dms_router
 from app.api.routes.roulette import router as roulette_router
 from app.api.routes.realtime import router as realtime_router
 from app.api.routes.admin import router as admin_router
+from app.api.routes.affiliate import router as affiliate_router
 from app.core.rate_limit import RateLimitMiddleware
 
 @asynccontextmanager
@@ -75,6 +76,7 @@ app.include_router(follows_router)
 app.include_router(media_router)
 app.include_router(realtime_router)
 app.include_router(admin_router)
+app.include_router(affiliate_router)
 
 # A fresh checkout does not contain the ignored upload folder. Create it before
 # StaticFiles validates the path so local development and CI can start cleanly.
